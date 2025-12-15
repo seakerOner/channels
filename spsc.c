@@ -1,19 +1,39 @@
 /* SPSC - Single Producer Single Consumer Channel */
 
 #include "spsc.h"
+#include <stdalign.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef CACHELINE_SIZE
+#define CACHELINE_SIZE 64
+#endif 
+
+// Producer cursor with cache-line alignment to avoid false sharing
+typedef struct {
+  alignas(CACHELINE_SIZE) _Atomic size_t tail;
+  char _pad[CACHELINE_SIZE - sizeof(size_t)];
+} ConsumerCursor;
+
+// Consumer cursor with cache-line alignment to avoid false sharing
+typedef struct {
+  alignas(CACHELINE_SIZE) _Atomic size_t head;
+  char _pad[CACHELINE_SIZE - sizeof(size_t)];
+} ProducerCursor;
+
 typedef struct ChannelSpsc_t {
   uint8_t *buffer;
   size_t capacity;  // number of elements
   size_t elem_size; // sizeof(T)
 
-  _Atomic size_t head; // where to write
-  _Atomic size_t tail; // where to consume
+  //_Atomic size_t head; // where to write
+  ProducerCursor producer;
+  //_Atomic size_t tail; // where to consume
+  ConsumerCursor consumer;
+
 
   _Atomic ChanState state; // 0 -> Open | 1 -> Closed
 } ChannelSpsc;
@@ -35,8 +55,8 @@ ChannelSpsc *channel_create_spsc(size_t capacity, size_t elem_size) {
   chan->buffer = tmp;
   chan->capacity = capacity;
   chan->elem_size = elem_size;
-  chan->head = 0;
-  chan->tail = 0;
+  chan->producer.head = 0;
+  chan->consumer.tail = 0;
   chan->state = OPEN;
 
   return chan;
@@ -96,8 +116,8 @@ SenderSpsc *spsc_get_sender(ChannelSpsc *chan) {
 
   sender->buffer = chan->buffer;
   sender->inner_c_cap = chan->capacity;
-  sender->head = &chan->head;
-  sender->tail = &chan->tail;
+  sender->head = &chan->producer.head;
+  sender->tail = &chan->consumer.tail;
   sender->elem_size = chan->elem_size;
   sender->chan_state = &chan->state;
 
@@ -112,8 +132,8 @@ ReceiverSpsc *spsc_get_receiver(ChannelSpsc *chan) {
 
   receiver->buffer = chan->buffer;
   receiver->inner_c_cap = chan->capacity;
-  receiver->tail = &chan->tail;
-  receiver->head = &chan->head;
+  receiver->tail = &chan->consumer.tail;
+  receiver->head = &chan->producer.head;
   receiver->elem_size = chan->elem_size;
 
   return receiver;

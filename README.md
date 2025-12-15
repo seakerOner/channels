@@ -7,12 +7,12 @@ This project aims to provide lock-free, minimal-overhead communication primitive
 
  - **Lock-free SPSC channel** for communication between a single producer and a single consumer thread
 
-
 ### SPSC Channel 
 
 #### Features
 
 - Lock-free SPSC channel for communication between a single producer and a single consumer thread.
+- **Optimized for cache-line alignment** to avoid false sharing between producer and consumer cursors. This ensures that cache invalidations between threads are minimized, improving performance in multithreaded applications.
 - Dynamically allocated buffer with wrap-around (ring buffer) using modular arithmetic.
 - try_send ensures safe sending without overwriting unread data.
 - Supports arbitrary element types via element size (elem_size).
