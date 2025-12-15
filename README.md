@@ -112,4 +112,5 @@ int main() {
     - `SPSC_ERR_FULL`: Send failed, buffer is full.
     - `SPSC_ERR_EMPTY`: Receive failed, buffer is empty.
     - `SPSC_ERR_NULL`: Null pointer provided.
+    - `SPSC_ERR_CLOSED`: Channel is closed.
     - Memory: `spsc_try_send` will never overwrite unread elements.
