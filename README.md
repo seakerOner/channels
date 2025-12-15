@@ -114,3 +114,8 @@ int main() {
     - `SPSC_ERR_NULL`: Null pointer provided.
     - `SPSC_ERR_CLOSED`: Channel is closed.
     - Memory: `spsc_try_send` will never overwrite unread elements.
+
+#### Portability & Safety
+- **Atomic operations**: The channel relies on C11 atomic operations (`_Atomic` and `atomic_load`/`store`/`fetch_add`). Ensure your compiler fully supports C11 atomics and your platform guarantees atomicity for size_t operations.
+- **Platform types**: The channel uses size_t for indexing and capacity. While this usually works on 32 and 64-bit platforms, extremely large channels on unusual architectures may require review.
+- **Memory safety**: Users are responsible for providing valid element sizes (elem_size) and pointers for sending/receiving data. Sending invalid pointers or incorrect sizes may corrupt the buffer.
