@@ -8,7 +8,7 @@ This project aims to provide lock-free, minimal-overhead communication primitive
  - **Lock-free SPSC channel** for communication between a single producer and a single consumer thread
  - **Lock-free MPSC channel** for communication from multiple producer threads to a single consumer thread
 
-> SPSC Channel
+### SPSC Channel
 
 #### Features
 
@@ -121,7 +121,7 @@ int main() {
 - **Platform types**: The channel uses size_t for indexing and capacity. While this usually works on 32 and 64-bit platforms, extremely large channels on unusual architectures may require review.
 - **Memory safety**: Users are responsible for providing valid element sizes (elem_size) and pointers for sending/receiving data. Sending invalid pointers or incorrect sizes may corrupt the buffer.
 
-> MPSC Channel
+### MPSC Channel
 
 #### Features
 
