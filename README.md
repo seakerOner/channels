@@ -217,6 +217,7 @@ int main() {
     for (int i = 0; i < NUM_PRODUCERS; i++) {
         pthread_join(producers[i], NULL);
     }
+    mpsc_close(chan);
     pthread_join(cons, NULL);
 
     mpsc_destroy(chan);
