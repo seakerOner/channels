@@ -1,3 +1,4 @@
+#include "mpsc.h"
 #include "spsc.h"
 #include <stdio.h>
 
@@ -31,7 +32,6 @@ int main() {
   int v = spsc_recv(receiver, &value);
   int v1 = spsc_recv(receiver, &value1);
   int v2 = spsc_recv(receiver, &value2);
-
 
   printf("Received: %lo \n", value);
   printf("Received: %lo \n", value1);

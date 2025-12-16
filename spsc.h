@@ -6,19 +6,10 @@
    and a single consumer thread.
    ========================================================================== */
 
+#include "channels.h"
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
-
-/* Return codes */
-#define SPSC_OK 0
-#define SPSC_ERR_NULL -1
-#define SPSC_ERR_CLOSED -4
-#define SPSC_ERR_EMPTY -2
-#define SPSC_ERR_FULL -3
-
-/* Channel state */
-typedef enum ChanState_t { OPEN = 0, CLOSED = 1 } ChanState;
 
 /* Channel */
 typedef struct ChannelSpsc_t ChannelSpsc;

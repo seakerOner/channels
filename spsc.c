@@ -8,32 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef CACHELINE_SIZE
-#define CACHELINE_SIZE 64
-#endif 
-
-// Producer cursor with cache-line alignment to avoid false sharing
-typedef struct {
-  alignas(CACHELINE_SIZE) _Atomic size_t tail;
-  char _pad[CACHELINE_SIZE - sizeof(size_t)];
-} ConsumerCursor;
-
-// Consumer cursor with cache-line alignment to avoid false sharing
-typedef struct {
-  alignas(CACHELINE_SIZE) _Atomic size_t head;
-  char _pad[CACHELINE_SIZE - sizeof(size_t)];
-} ProducerCursor;
-
 typedef struct ChannelSpsc_t {
   uint8_t *buffer;
   size_t capacity;  // number of elements
   size_t elem_size; // sizeof(T)
 
-  //_Atomic size_t head; // where to write
   ProducerCursor producer;
-  //_Atomic size_t tail; // where to consume
   ConsumerCursor consumer;
-
 
   _Atomic ChanState state; // 0 -> Open | 1 -> Closed
 } ChannelSpsc;
@@ -108,6 +89,7 @@ typedef struct ReceiverSpsc_t {
   _Atomic size_t *tail;
 } ReceiverSpsc;
 
+
 SenderSpsc *spsc_get_sender(ChannelSpsc *chan) {
   if (!chan) {
     return NULL;
@@ -141,19 +123,19 @@ ReceiverSpsc *spsc_get_receiver(ChannelSpsc *chan) {
 
 int spsc_try_send(SenderSpsc *sender, const void *element) {
   if (!sender) {
-    return SPSC_ERR_NULL;
+    return CHANNEL_ERR_NULL;
   }
   ChanState state =
       atomic_load_explicit(sender->chan_state, memory_order_acquire);
 
   if (state == CLOSED) {
-    return SPSC_ERR_CLOSED;
+    return CHANNEL_ERR_CLOSED;
   }
 
   size_t head = atomic_load_explicit(sender->head, memory_order_relaxed);
   size_t tail = atomic_load_explicit(sender->tail, memory_order_acquire);
   if (head - tail == sender->inner_c_cap) {
-    return SPSC_ERR_FULL; // FULL
+    return CHANNEL_ERR_FULL;
   }
 
   size_t index = head % sender->inner_c_cap;
@@ -163,17 +145,17 @@ int spsc_try_send(SenderSpsc *sender, const void *element) {
 
   atomic_fetch_add_explicit(sender->head, 1, memory_order_release);
 
-  return SPSC_OK;
+  return CHANNEL_OK;
 }
 
 int spsc_recv(ReceiverSpsc *receiver, void *out) {
   if (!receiver) {
-    return SPSC_ERR_NULL;
+    return CHANNEL_ERR_NULL;
   }
   size_t tail = atomic_load_explicit(receiver->tail, memory_order_relaxed);
   size_t head = atomic_load_explicit(receiver->head, memory_order_acquire);
   if (tail == head) {
-    return SPSC_ERR_EMPTY;
+    return CHANNEL_ERR_EMPTY;
   }
 
   size_t index = tail % receiver->inner_c_cap;
@@ -181,5 +163,5 @@ int spsc_recv(ReceiverSpsc *receiver, void *out) {
   memcpy(out, receiver->buffer + (index * receiver->elem_size),
          receiver->elem_size);
   atomic_fetch_add_explicit(receiver->tail, 1, memory_order_relaxed);
-  return SPSC_OK;
+  return CHANNEL_OK;
 }
