@@ -8,7 +8,7 @@ This project aims to provide lock-free, minimal-overhead communication primitive
  - **Lock-free SPSC channel** for communication between a single producer and a single consumer thread
  - **Lock-free MPSC channel** for communication from multiple producer threads to a single consumer thread
 
-<SPSC Channel>
+> SPSC Channel
 
 #### Features
 
@@ -120,9 +120,9 @@ int main() {
 - **Atomic operations**: The channel relies on C11 atomic operations (`_Atomic` and `atomic_load`/`store`/`fetch_add`). Ensure your compiler fully supports C11 atomics and your platform guarantees atomicity for size_t operations.
 - **Platform types**: The channel uses size_t for indexing and capacity. While this usually works on 32 and 64-bit platforms, extremely large channels on unusual architectures may require review.
 - **Memory safety**: Users are responsible for providing valid element sizes (elem_size) and pointers for sending/receiving data. Sending invalid pointers or incorrect sizes may corrupt the buffer.
-</SPSC Channel>
 
-</MPSC Channel>
+> MPSC Channel
+
 #### Features
 
 - Lock-free MPSC channel for communication from multiple producers to a single consumer thread.
@@ -234,4 +234,3 @@ int main() {
     - `CHANNEL_ERR_CLOSED`: Channel is closed.
     - `CHANNEL_ERR_EMPTY`: Receive failed; buffer is empty.
 - `cpu_relax()`: Spin-wait function for producers. Can be used externally for custom waiting logic.
-</MPSC Channel>
